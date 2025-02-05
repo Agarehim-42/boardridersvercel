@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+
+
+.kartinKonturu{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    
+}
