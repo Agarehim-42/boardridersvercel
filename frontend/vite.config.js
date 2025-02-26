@@ -9,6 +9,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3010/', // Backend serverinizin URL-si
         changeOrigin: true,
+      },
+      '/crud': {
+        target:'http://localhost:3010/',
+        changeOrigin:true
       }
     }
   }
