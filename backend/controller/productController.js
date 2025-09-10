@@ -17,8 +17,8 @@ export const getProducts = catchAsyncErrors(async (req, res, next) => {
   })
 })
 
-// Məhsul detalları
-export const getProductDetails = catchAsyncErrors(async (req, res, next) => {
+// Məhsulu əldə etmək
+export const getProduct = catchAsyncErrors(async (req, res, next) => {
   const product = await Product.findById(req?.params?.id)
 
   if (!product) {
@@ -59,7 +59,8 @@ export const deleteProduct = catchAsyncErrors(async (req, res, next) => {
   })
 })
 
-export const newProduct = catchAsyncErrors(async (req, res, next) => {
+// Yeni məhsul yaratmaq
+export const createProduct = catchAsyncErrors(async (req, res, next) => {
   const images = []
 
   // Şəkil yükləmək
