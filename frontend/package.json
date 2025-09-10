@@ -19,6 +19,7 @@
     "@heroicons/react": "^2.2.0",
     "@reduxjs/toolkit": "^2.4.0",
     "aos": "^2.3.4",
+    "caniuse-lite": "^1.0.30001741",
     "chart.js": "^4.4.7",
     "firebase": "^11.3.1",
     "flowbite": "^2.5.2",
