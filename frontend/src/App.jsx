@@ -27,7 +27,7 @@ import Kisi from "./components/Kisi";
 
 import Qadin from "./components/Qadin";
 import ResetPassword from "./components/ResetPassword";
-import SupportButton from "./components/supportButton";
+
 import PrivateRoute from './components/PrivateRoute'
 import Blogs from "./components/Blogs";
 
