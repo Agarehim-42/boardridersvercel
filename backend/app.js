@@ -1,81 +1,90 @@
-import express from "express"
-import cors from "cors"
-import http from "http"
-import { Server } from "socket.io"
-import cookieParser from "cookie-parser"
-import { connectDatabase } from "./backend/utils/database.js"
-import productsRouter from "./backend/routes/productRoutes.js"
-import userRouter from "./backend/routes/auth.js"
-import errorsMiddleware from "./backend/middleware/errorMiddleware.js"
-import blogRoutes from "./backend/routes/blog.js"
-import ChatMessage from "./backend/model/Socket.js"
+// server.js
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import http from "http";
+import { Server } from "socket.io";
+import cookieParser from "cookie-parser";
+import { connectDatabase } from "./config/dbConnect.js";
+import productsRouter from "./routes/product.js";
+import userRouter from "./routes/auth.js";
+import errorsMiddleware from "./middleware/errors.js";
+import cartRouter from "./routes/product.js";
+import blogRoutes from "./routes/blog.js";
 
-// dotenv.config({ path: "config/config.env" });
 
-const app = express()
+// ChatMessage modelini import ediyoruz (dosya yolunu proje yapınıza göre ayarlayın)
+import ChatMessage from "./model/Socket.js";
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  }),
-)
+dotenv.config({ path: "config/config.env" });
 
-connectDatabase()
+const app = express();
 
-app.use(express.json())
-app.use(cookieParser())
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 
-app.use("/api/v1", productsRouter)
-app.use("/crud/v1", userRouter)
-app.use("/api/v1/", blogRoutes)
+connectDatabase();
 
-app.use(errorsMiddleware)
+app.use(express.json());
+app.use(cookieParser());
 
-const server = http.createServer(app)
+app.use("/api/v1", productsRouter);
+app.use("/crud/v1", userRouter);
+app.use("/api/v1", cartRouter);
+app.use("/api/v1/", blogRoutes);
+
+
+app.use(errorsMiddleware);
+
+// HTTP server ve Socket.IO entegrasyonu
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
-})
+});
 
 io.on("connection", async (socket) => {
-  console.log("Yeni client bağlandı:", socket.id)
+  console.log("Yeni client bağlandı:", socket.id);
 
+  // Client bağlanır bağlanmaz veritabanındaki chat geçmişini çekip gönderiyoruz
   try {
-    const chatHistory = await ChatMessage.find({}).sort({ createdAt: 1 })
-    socket.emit("chatHistory", chatHistory)
+    const chatHistory = await ChatMessage.find({}).sort({ createdAt: 1 });
+    socket.emit("chatHistory", chatHistory);
   } catch (error) {
-    console.error("Chat geçmişi alınırken hata:", error)
+    console.error("Chat geçmişi alınırken hata:", error);
   }
 
+  // Client'tan gelen mesajları dinleyip veritabanına kaydediyoruz
   socket.on("chatMessage", async (data) => {
+    // data örneğin { sender: "user", userName: "Ali", text: "Merhaba" } şeklinde olmalı
     try {
       const newMessage = new ChatMessage({
-        sender: data.sender,
-        userName: data.userName,
+        sender: data.sender,       // "admin" veya "user"
+        userName: data.userName,   // Backend'de saklanacak kullanıcı adı
         text: data.text,
-      })
+      });
 
-      await newMessage.save()
-      io.emit("chatMessage", newMessage)
+      await newMessage.save();
+
+      // Kaydedilen mesajı tüm clientlara yayınlıyoruz
+      io.emit("chatMessage", newMessage);
     } catch (error) {
-      console.error("Mesaj kaydedilirken hata:", error)
+      console.error("Mesaj kaydedilirken hata:", error);
     }
-  })
+  });
 
   socket.on("disconnect", () => {
-    console.log("Client ayrıldı:", socket.id)
-  })
-})
+    console.log("Client ayrıldı:", socket.id);
+  });
+});
 
-const PORT = process.env.PORT || 3010
-server.listen(PORT, () => {
-  console.log("Server " + PORT + " portunda çalışıyor")
-})
-
-export default app
+server.listen(process.env.PORT, () => {
+  console.log("Server " + process.env.PORT + " portunda çalışıyor");
+});
