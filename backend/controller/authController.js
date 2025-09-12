@@ -94,7 +94,7 @@ export const forgotPassword = catchAsyncErrors( async(req , res , next) => {
     await user.save()
 
     //linkin yaradilma merhelesi 
-    const resetUrl = `${process.env.FRONTEND_URL}/crud/v1/password/reset/token/${resetToken}`
+    const resetUrl = `${process.env.VITE_BACKEND_URL}/crud/v1/password/reset/token/${resetToken}`
     const message = getResetPasswordTemplate(user?.name,resetUrl)
 
 
